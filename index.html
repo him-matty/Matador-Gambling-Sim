@@ -1,0 +1,198 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matador Gambling Simulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Rubik', sans-serif;
+      background-color: #0d0d0d;
+      color: #f5f5f5;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 2.5rem;
+      color: #FFD700;
+      margin-bottom: 0.5rem;
+    }
+    h3 {
+      margin-top: 2rem;
+      color: #FFD700;
+      border-bottom: 1px solid #FFD700;
+      padding-bottom: 0.5rem;
+    }
+    input, select, button, label {
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    input, select {
+      background-color: #1e1e1e;
+      color: #fff;
+    }
+    button {
+      background-color: #FFD700;
+      color: #111;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    button:hover {
+      background-color: #e6c200;
+    }
+    hr {
+      border: 1px solid #333;
+      margin: 2rem 0;
+    }
+    #balances p {
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+    .logo {
+      height: 60px;
+    }
+    .history, .leaderboard {
+      margin-top: 2rem;
+      background-color: #1a1a1a;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(255, 215, 0, 0.1);
+    }
+    .highlight {
+      color: #FFD700;
+      font-weight: bold;
+    }
+    .section {
+      margin-top: 1.5rem;
+    }
+  </style>
+  <script>
+    const players = [
+      { name: 'Ajalon', balance: 1000 },
+      { name: 'Mencer', balance: 1000 },
+      { name: 'Hinzyn', balance: 1000 }
+    ];
+
+    const lines = [];
+    const history = [];
+
+    function addLine() {
+      const desc = document.getElementById('desc').value;
+      const odds = parseInt(document.getElementById('odds').value);
+      lines.push({ desc, odds });
+      renderLines();
+    }
+
+    function renderLines() {
+      const lineList = document.getElementById('lineList');
+      lineList.innerHTML = '';
+      lines.forEach((line, index) => {
+        lineList.innerHTML += `<option value="${index}">${line.desc} (${line.odds > 0 ? '+' : ''}${line.odds})</option>`;
+      });
+    }
+
+    function placeBet() {
+      const playerName = document.getElementById('player').value;
+      const lineIndex = parseInt(document.getElementById('lineList').value);
+      const amount = parseInt(document.getElementById('amount').value);
+      const outcome = document.getElementById('outcome').checked;
+      const player = players.find(p => p.name === playerName);
+      const line = lines[lineIndex];
+      let result = 0;
+      if (outcome) {
+        const payout = line.odds > 0 ? amount * (line.odds / 100) : amount / (Math.abs(line.odds) / 100);
+        player.balance += payout;
+        result = payout;
+      } else {
+        player.balance -= amount;
+        result = -amount;
+      }
+      history.push({ player: playerName, line: line.desc, odds: line.odds, amount, result });
+      renderBalances();
+      renderHistory();
+      renderLeaderboard();
+    }
+
+    function renderBalances() {
+      const balDiv = document.getElementById('balances');
+      balDiv.innerHTML = players.map(p => `<p><strong>${p.name}</strong>: $${p.balance.toFixed(2)}</p>`).join('');
+    }
+
+    function renderHistory() {
+      const histDiv = document.getElementById('history');
+      histDiv.innerHTML = history.map(h => `<p>${h.player} bet $${h.amount} on "${h.line}" (${h.odds > 0 ? '+' : ''}${h.odds}) → ${h.result >= 0 ? '+$' + h.result.toFixed(2) : '-$' + Math.abs(h.result).toFixed(2)}</p>`).join('');
+    }
+
+    function renderLeaderboard() {
+      const sorted = [...players].sort((a, b) => b.balance - a.balance);
+      const leadDiv = document.getElementById('leaderboard');
+      leadDiv.innerHTML = sorted.map((p, i) => `<p class="${i === 0 ? 'highlight' : ''}">${p.name}: $${p.balance.toFixed(2)}</p>`).join('');
+    }
+
+    function resetWeek() {
+      players.forEach(p => p.balance = 1000);
+      lines.length = 0;
+      history.length = 0;
+      renderLines();
+      renderBalances();
+      renderHistory();
+      renderLeaderboard();
+    }
+
+    window.onload = () => {
+      renderBalances();
+      renderLeaderboard();
+    };
+  </script>
+</head>
+<body>
+  <h1>
+    <img src="matador-logo.png" alt="Matador Logo" class="logo">
+    Matador Gambling Simulator
+  </h1>
+  <p style="text-align:center; font-style:italic; font-size: 1.1rem; margin-top: -1rem; color: #999;">Built by Matadors. Fueled by delusion.</p>
+  <div class="section">
+    <h3>Add New Line</h3>
+    <input id="desc" placeholder="Description" />
+    <input id="odds" type="number" placeholder="Odds (e.g., -120 or +200)" />
+    <button onclick="addLine()">Add Line</button>
+  </div>
+  <div class="section">
+    <h3>Place Bet</h3>
+    <select id="player">
+      <option value="Ajalon">Ajalon</option>
+      <option value="Mencer">Mencer</option>
+      <option value="Hinzyn">Hinzyn</option>
+    </select>
+    <select id="lineList"></select>
+    <input id="amount" type="number" placeholder="Amount" />
+    <label><input type="checkbox" id="outcome" /> Won?</label>
+    <button onclick="placeBet()">Submit Bet</button>
+  </div>
+  <div class="section" id="balances"></div>
+  <div class="history">
+    <h3>📜 Bet History</h3>
+    <div id="history"></div>
+  </div>
+  <div class="leaderboard">
+    <h3>🏆 Leaderboard</h3>
+    <div id="leaderboard"></div>
+  </div>
+  <div style="margin-top: 2rem; text-align: center;">
+    <button onclick="resetWeek()">🔄 Reset Week</button>
+  </div>
+</body>
+</html>
